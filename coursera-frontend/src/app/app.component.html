@@ -1,0 +1,43 @@
+<!-- src/app/app.component.html -->
+<div class="min-h-screen bg-gray-100 text-gray-800">
+    <div class="p-4 sm:p-8">
+        <!-- Header Section -->
+        <header class="bg-white shadow-md rounded-lg p-4 sm:p-6 mb-8 flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Coursera Clone</h1>
+            <nav class="space-x-2 sm:space-x-4 flex items-center">
+                <!-- Navigation Buttons -->
+                <button (click)="navigateToAllCourses()"
+                        [class.bg-blue-600]="router.url === '/' || router.url === '/login' || router.url === '/register'"
+                        [class.text-white]="router.url === '/' || router.url === '/login' || router.url === '/register'"
+                        [class.bg-gray-300]="router.url === '/my-courses' || router.url.startsWith('/courses/')"
+                        [class.text-gray-800]="router.url === '/my-courses' || router.url.startsWith('/courses/')"
+                        class="px-3 py-1 sm:px-4 sm:py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm sm:text-base">
+                    All Courses
+                </button>
+
+                <ng-container *ngIf="!(isLoggedIn$ | async)">
+                    <button (click)="navigateToLogin()" class="px-3 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm sm:text-base">Login</button>
+                    <button (click)="navigateToRegister()" class="px-3 py-1 sm:px-4 sm:py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 text-sm sm:text-base">Register</button>
+                </ng-container>
+
+                <ng-container *ngIf="(isLoggedIn$ | async)">
+                    <button (click)="navigateToMyCourses()"
+                            [class.bg-blue-600]="router.url === '/my-courses'"
+                            [class.text-white]="router.url === '/my-courses'"
+                            [class.bg-gray-300]="router.url !== '/my-courses'"
+                            [class.text-gray-800]="router.url !== '/my-courses'"
+                            class="px-3 py-1 sm:px-4 sm:py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm sm:text-base">
+                        My Courses
+                    </button>
+                    <span class="text-gray-700 font-medium text-sm sm:text-base ml-4">Welcome, {{ username }}!</span>
+                    <button (click)="onLogout()" class="px-3 py-1 sm:px-4 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-sm sm:text-base">Logout</button>
+                </ng-container>
+            </nav>
+        </header>
+
+        <!-- Router Outlet for all main content components -->
+        <main class="container mx-auto px-2 sm:px-0">
+            <router-outlet></router-outlet>
+        </main>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can add your custom global styles below these directives */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f8f8;
+}
+.course-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+/* Ensure chart containers are responsive and constrained */
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Max width for charts */
+    margin-left: auto;
+    margin-right: auto;
+    height: 300px; /* Base height for charts */
+    max-height: 400px; /* Max height for charts */
+}
+@media (min-width: 768px) {
+    .chart-container {
+        height: 350px; /* Slightly taller on medium screens */
+    }
+}

@@ -1,0 +1,64 @@
+<main class="container mx-auto px-2 sm:px-0">
+    <ng-container *ngIf="showLogin || showRegister">
+        <app-login *ngIf="showLogin && !(isLoggedIn$ | async)"
+                   (switchToRegister)="showRegisterFormInternal()"
+                   (loginSuccess)="onLoginSuccess()">
+        </app-login>
+
+        <app-register *ngIf="showRegister && !(isLoggedIn$ | async)"
+                      (switchToLogin)="showLoginFormInternal()"
+                      (registerSuccess)="onRegisterSuccess()">
+        </app-register>
+    </ng-container>
+
+    <ng-container *ngIf="!showLogin && !showRegister">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-700 mb-6">
+            {{ showMyCourses ? 'My Enrolled Courses' : 'Available Courses' }}
+        </h2>
+        <p class="text-gray-600 mb-8">
+            {{ showMyCourses ? 'Here are the courses you are currently enrolled in.' : 'Explore a wide range of courses designed to enhance your skills and knowledge. Click on a course to view more details.' }}
+        </p>
+
+        <div *ngIf="(showMyCourses && enrolledCourses.length === 0 && (isLoggedIn$ | async)) || (!showMyCourses && !showMyCourses && allCourses.length === 0 && !(isLoggedIn$ | async))" class="text-center text-gray-600 py-8">
+            <p *ngIf="showMyCourses && (isLoggedIn$ | async)">You are not enrolled in any courses yet.</p>
+            <p *ngIf="!showMyCourses && allCourses.length === 0">No courses available. Please check back later.</p>
+            <button *ngIf="showMyCourses && (isLoggedIn$ | async)" (click)="viewAllCoursesInternal()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Browse All Courses
+            </button>
+            <p *ngIf="!showMyCourses && allCourses.length === 0 && !(isLoggedIn$ | async)">Please log in or register to view available courses.</p>
+        </div>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let course of (showMyCourses ? enrolledCourses : allCourses)" class="bg-white rounded-lg shadow-lg overflow-hidden course-card">
+                <a [routerLink]="['/courses', course.id]">
+                    <img [src]="course.thumbnailUrl" [alt]="course.title" class="w-full h-40 sm:h-48 object-cover">
+                </a>
+                <div class="p-4 sm:p-6">
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
+                        <a [routerLink]="['/courses', course.id]" class="hover:text-blue-600">{{ course.title }}</a>
+                    </h3>
+                    <p class="text-gray-600 text-xs sm:text-sm mb-4 line-clamp-3">{{ course.description }}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-blue-600 font-bold text-base sm:text-lg">${{ course.price }}</span>
+                        <ng-container *ngIf="!showMyCourses">
+                            <button *ngIf="!isCourseEnrolled(course.id)" (click)="onPurchaseCourse(course.id)" class="px-3 py-1 sm:px-4 sm:py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 text-sm sm:text-base">
+                                Purchase
+                            </button>
+                            <span *ngIf="isCourseEnrolled(course.id)" class="text-gray-500 text-sm px-3 py-1 sm:px-4 sm:py-2 bg-gray-200 rounded-md">Enrolled</span>
+                        </ng-container>
+                        <span *ngIf="showMyCourses" class="text-gray-500 text-sm px-3 py-1 sm:px-4 sm:py-2 bg-gray-200 rounded-md">Enrolled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-700 mt-12 mb-6">Course Price Distribution</h2>
+        <p class="text-gray-600 mb-8">
+            This chart visualizes the distribution of course prices across our catalog, giving you an overview of our pricing tiers.
+        </p>
+        <div class="chart-container bg-white rounded-lg shadow-lg p-4 flex items-center justify-center">
+            <canvas id="priceDistributionChart"></canvas>
+        </div>
+    </ng-container>
+</main>
