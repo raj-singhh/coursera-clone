@@ -169,19 +169,19 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const priceRanges = {
-      '<$30': 0,
-      '$30-$50': 0,
-      '>$50': 0
+      '<₹30': 0,
+      '₹30-₹50': 0,
+      '>₹50': 0
     };
 
     coursesToChart.forEach(course => {
       const price = parseFloat(course.price.toString());
       if (price < 30) {
-        priceRanges['<$30']++;
+        priceRanges['<₹30']++;
       } else if (price >= 30 && price <= 50) {
-        priceRanges['$30-$50']++;
+        priceRanges['₹30-₹50']++;
       } else {
-        priceRanges['>$50']++;
+        priceRanges['>₹50']++;
       }
     });
 

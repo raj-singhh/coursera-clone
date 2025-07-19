@@ -45,7 +45,7 @@ export class CourseService {
   private enrollmentApiUrl = `${environment.backendUrl}/api/enrollments`;
   private lessonApiUrl = `${environment.backendUrl}/api/lessons`;
   private progressApiUrl = `${environment.backendUrl}/api/progress`;
-  private certificateApiUrl = `${environment.backendUrl}/api/certificates`; // NEW: Certificate API URL
+  private certificateApiUrl = `${environment.backendUrl}/api/certificates`; 
 
   constructor(private http: HttpClient) { }
 

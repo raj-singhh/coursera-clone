@@ -50,7 +50,7 @@
 
             <!-- Sidebar for Price, Enroll Button, and Lessons List -->
             <div class="md:w-1/3 bg-gray-50 p-6 rounded-lg shadow-inner flex flex-col">
-                <span class="text-3xl font-bold text-blue-600 mb-6 text-center">${{ courseDetails.price }}</span>
+                <span class="text-3xl font-bold text-blue-600 mb-6 text-center">₹{{ courseDetails.price }}</span>
 
                 <!-- Conditional button based on enrollment status -->
                 <ng-container *ngIf="isLoggedIn$ | async; else notLoggedIn">
