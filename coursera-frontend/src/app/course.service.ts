@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
 import { MessageResponse } from './auth.service';
 
 export interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   thumbnailUrl: string;
@@ -18,7 +18,7 @@ export interface Course {
 }
 
 export interface Lesson {
-  id: number;
+  id: string;
   title: string;
   videoUrl: string;
   description?: string;
@@ -26,16 +26,17 @@ export interface Lesson {
 }
 
 export interface Progress {
-  id: number;
+  id: string;
   lesson: Lesson;
   completed: boolean;
   watchedPercentage: number;
   lastUpdated: string;
 }
 
-export interface LessonProgressMap {
-  [lessonId: number]: Progress;
-}
+
+export type LessonProgressMap = {
+  [lessonId: string]: Progress;
+};
 
 @Injectable({
   providedIn: 'root'
@@ -53,11 +54,11 @@ export class CourseService {
     return this.http.get<Course[]>(this.apiUrl);
   }
 
-  getCourseById(id: number): Observable<Course> {
+  getCourseById(id: string): Observable<Course> {
     return this.http.get<Course>(`${this.apiUrl}/${id}`);
   }
 
-  enrollInCourse(courseId: number): Observable<MessageResponse> {
+  enrollInCourse(courseId: string): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(`${this.enrollmentApiUrl}/enroll/${courseId}`, {});
   }
 
@@ -65,28 +66,28 @@ export class CourseService {
     return this.http.get<Course[]>(`${this.enrollmentApiUrl}/my-courses`);
   }
 
-  isEnrolledInCourse(courseId: number): Observable<boolean> {
+  isEnrolledInCourse(courseId: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.enrollmentApiUrl}/is-enrolled/${courseId}`);
   }
 
-  getLessonsByCourse(courseId: number): Observable<Lesson[]> {
+  getLessonsByCourse(courseId: string): Observable<Lesson[]> {
     return this.http.get<Lesson[]>(`${this.lessonApiUrl}/course/${courseId}`);
   }
 
-  updateLessonProgress(lessonId: number, watchedPercentage: number, completed: boolean): Observable<MessageResponse> {
+  updateLessonProgress(lessonId: string, watchedPercentage: number, completed: boolean): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(`${this.progressApiUrl}/lesson/${lessonId}`, { watchedPercentage, isCompleted: completed });
   }
 
-  getUserProgressForCourse(courseId: number): Observable<LessonProgressMap> {
+  getUserProgressForCourse(courseId: string): Observable<LessonProgressMap> {
     return this.http.get<LessonProgressMap>(`${this.progressApiUrl}/course/${courseId}/user-progress`);
   }
 
-  getCourseCompletionStatus(courseId: number): Observable<boolean> {
+  getCourseCompletionStatus(courseId: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.progressApiUrl}/course/${courseId}/completion-status`);
   }
 
   // NEW: Method to download certificate
-  downloadCertificate(courseId: number): Observable<Blob> {
+  downloadCertificate(courseId: string): Observable<Blob> {
     // responseType: 'blob' is crucial for downloading binary data like PDFs
     return this.http.get(`${this.certificateApiUrl}/download/${courseId}`, { responseType: 'blob' });
   }

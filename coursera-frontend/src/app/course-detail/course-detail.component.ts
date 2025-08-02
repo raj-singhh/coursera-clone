@@ -4,8 +4,11 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService, Course, Lesson, LessonProgressMap, Progress } from '../course.service';
 import { AuthService } from '../auth.service';
+import { PaymentService } from '../payment.service';
 import { Observable, Subscription, forkJoin } from 'rxjs';
 import { take } from 'rxjs/operators';
+
+declare var Razorpay: any;
 
 @Component({
   selector: 'app-course-detail',
@@ -19,7 +22,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   @ViewChild('videoPlayer') videoPlayerRef!: ElementRef<HTMLVideoElement>;
 
   courseDetails: Course | null = null;
-  currentCourseId: number | null = null;
+  currentCourseId: string | null = null;
   isLoggedIn$: Observable<boolean>;
   currentCourseIsEnrolled: boolean = false;
   lessons: Lesson[] = [];
@@ -34,6 +37,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     public router: Router,
     private courseService: CourseService,
     private authService: AuthService,
+    private paymentService: PaymentService,
     private cdr: ChangeDetectorRef
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
@@ -43,7 +47,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
-        this.currentCourseId = +id;
+        this.currentCourseId = id;
         this.fetchCourseDetails(this.currentCourseId);
       } else {
         console.error('Course ID not found in route parameters.');
@@ -75,7 +79,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  fetchCourseDetails(id: number): void {
+  fetchCourseDetails(id: string): void {
     this.courseService.getCourseById(id).subscribe({
       next: (data) => {
         this.courseDetails = data;
@@ -100,7 +104,15 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   }
 
   private checkEnrollmentAndProgress(): void {
-    if (!this.currentCourseId || !this.authService.getToken()) {
+    if (!this.currentCourseId) {
+      this.currentCourseIsEnrolled = false;
+      this.lessonProgress = {};
+      this.isCourseCompleted = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    if (!this.authService.getToken()) {
+      // Not logged in, do not call protected endpoints
       this.currentCourseIsEnrolled = false;
       this.lessonProgress = {};
       this.isCourseCompleted = false;
@@ -119,9 +131,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
             this.courseService.getCourseCompletionStatus(this.currentCourseId!).pipe(take(1))
           ]).subscribe({
             next: ([progressData, completedStatus]) => {
-              this.lessonProgress = JSON.parse(JSON.stringify(progressData));
-              console.log('User progress for course (map) AFTER FETCH:', this.lessonProgress);
-              console.dir(this.lessonProgress);
+              this.lessonProgress = progressData;
 
               this.isCourseCompleted = completedStatus;
               console.log(`Course completion status AFTER FETCH: ${this.isCourseCompleted}`);
@@ -197,12 +207,12 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
 
     const video = this.videoPlayerRef.nativeElement;
     const percentage = (video.currentTime / video.duration) * 100;
-    const completed = video.ended || percentage >= 99.5;
+    const completed = video.ended || percentage >= 95;
 
     const currentProgress = this.lessonProgress[this.selectedLesson.id];
     const oldCompleted = currentProgress ? currentProgress.completed : false;
 
-    if (completed || (percentage - (currentProgress?.watchedPercentage || 0) >= 5) || (currentProgress?.watchedPercentage === 0 && percentage > 0 && !oldCompleted)) {
+    if ((completed && !oldCompleted) || (currentProgress && (percentage - currentProgress.watchedPercentage >= 5)) || (!currentProgress && percentage > 0)) {
       if (video.ended) {
         video.pause();
         video.loop = false;
@@ -221,7 +231,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
           };
           this.lessonProgress = {
             ...this.lessonProgress,
-            [this.selectedLesson!.id]: JSON.parse(JSON.stringify(updatedLessonProgress))
+            [this.selectedLesson!.id]: updatedLessonProgress
           };
 
           this.checkEnrollmentAndProgress();
@@ -234,14 +244,13 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  trackByLessonId(index: number, lesson: Lesson): number {
+  trackByLessonId(index: number, lesson: Lesson): string {
     return lesson.id;
   }
 
-  isLessonCompleted(lessonId: number): boolean {
+  isLessonCompleted(lessonId: string): boolean {
     const progress = this.lessonProgress[lessonId];
-    console.log(`DEBUG: isLessonCompleted for Lesson ID ${lessonId}. Progress object:`, progress, `Is completed:`, progress?.completed);
-    return progress?.completed || false;
+    return this.lessonProgress[lessonId]?.completed || false;
   }
 
   enrollInCourse(): void {
@@ -326,5 +335,18 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/']);
+  }
+
+  payWithRazorpay(): void {
+    if (!this.courseDetails) {
+      return;
+    }
+
+    if (!this.authService.isUserLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.router.navigate(['/payment', this.currentCourseId]);
   }
 }

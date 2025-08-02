@@ -6,7 +6,9 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './app/auth.interceptor';
 import { provideRouter, Routes } from '@angular/router';
 import { CourseDetailComponent } from './app/course-detail/course-detail.component';
+import { CertificateVerificationComponent } from './app/certificate-verification/certificate-verification.component';
 import { HomeComponent } from './app/home/home.component'; // NEW: Import HomeComponent
+import { PaymentComponent } from './app/payment/payment.component';
 
 // Define your application routes
 const routes: Routes = [
@@ -15,6 +17,8 @@ const routes: Routes = [
   { path: 'register', component: HomeComponent }, // Route for register form (HomeComponent handles display)
   { path: 'my-courses', component: HomeComponent }, // Route for my courses (HomeComponent handles display)
   { path: 'courses/:id', component: CourseDetailComponent }, // Route for course details
+  { path: 'payment/:id', component: PaymentComponent },
+  { path: 'verify-certificate/:userId/:courseId', component: CertificateVerificationComponent },
   { path: '**', redirectTo: '' } // Redirect any unknown path to home
 ];
 

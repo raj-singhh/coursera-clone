@@ -1,31 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --text-color: #333;
+  --background-color: #f4f7f6;
+  --card-background: rgba(255, 255, 255, 0.9);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* You can add your custom global styles below these directives */
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8f8f8;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
 }
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
 .course-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  background: var(--card-background);
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
 }
+
 .course-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transform: translateY(-10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
 }
-/* Ensure chart containers are responsive and constrained */
-.chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 600px; /* Max width for charts */
-    margin-left: auto;
-    margin-right: auto;
-    height: 300px; /* Base height for charts */
-    max-height: 400px; /* Max height for charts */
+
+.btn {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
-@media (min-width: 768px) {
-    .chart-container {
-        height: 350px; /* Slightly taller on medium screens */
-    }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }

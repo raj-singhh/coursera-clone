@@ -1,18 +1,20 @@
 // src/app/app.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, Router } from '@angular/router'; // Import Router
+import { RouterOutlet, RouterLink, Router, RouterLinkActive } from '@angular/router'; // Import Router
 import { AuthService } from './auth.service'; // Import AuthService
 import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet, // Essential for routing
-    // REMOVED: RouterLink is not used directly in app.component.html anymore
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive
   ]
 })
 export class AppComponent implements OnInit {

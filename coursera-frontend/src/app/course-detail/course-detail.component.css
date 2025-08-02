@@ -1,0 +1,128 @@
+.course-detail-container {
+  padding: 40px 0;
+}
+
+.course-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.course-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.course-instructor {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.course-meta {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  font-size: 1rem;
+}
+
+.course-body {
+  display: flex;
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.main-content {
+  flex-grow: 1;
+}
+
+.video-player-container,
+.course-thumbnail {
+  width: 100%;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+video {
+  width: 100%;
+  display: block;
+}
+
+.course-description h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.sidebar-card {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.course-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.lessons-list {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.lessons-list h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.lessons-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lessons-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.lessons-list li:hover,
+.lessons-list li.active {
+  background-color: #f0f2f5;
+}
+
+.completed-icon {
+  color: green;
+  font-weight: bold;
+}
+
+.certificate-section {
+  margin-top: 30px;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 100px;
+  font-size: 1.5rem;
+}

@@ -3,42 +3,31 @@ package com.example.coursera_clone.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@Entity
-@Table(name = "lessons")
+@Document(collection = "lessons")
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "course"}) // Ignore course to prevent circular reference
 public class Lesson {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false)
     private String title;
-
-    @Column(nullable = false)
     private String videoUrl; // URL for the lesson video
-
-    @Column(length = 500)
     private String description; // Optional lesson description
-
-    @Column(nullable = false)
     private Integer lessonOrder; // To maintain order of lessons in a course
+    // Store courseId as a string reference
+    private String courseId;
 
-    // ManyToOne relationship with Course
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
-
-    public Lesson(String title, String videoUrl, String description, Integer lessonOrder, Course course) {
+    public Lesson(String title, String videoUrl, String description, Integer lessonOrder, String courseId) {
         this.title = title;
         this.videoUrl = videoUrl;
         this.description = description;
         this.lessonOrder = lessonOrder;
-        this.course = course;
+        this.courseId = courseId;
     }
 }

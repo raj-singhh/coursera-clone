@@ -1,108 +1,65 @@
-<!-- src/app/course-detail/course-detail.component.html -->
-<div class="container mx-auto px-4 py-8">
-    <div *ngIf="courseDetails; else loadingOrNotFound" class="bg-white rounded-lg shadow-lg overflow-hidden p-6 md:p-8">
-        <button (click)="goBack()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 mb-6 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
-            Back to Courses
-        </button>
-
-        <div class="flex flex-col md:flex-row gap-8">
-            <!-- Main Course Info and Video Player -->
-            <div class="md:w-2/3">
-                <img *ngIf="!currentCourseIsEnrolled || !selectedLesson" [src]="courseDetails.thumbnailUrl" [alt]="courseDetails.title" class="w-full h-64 object-cover rounded-md mb-6 shadow-sm">
-
-                <!-- Video Player (only if enrolled and a lesson is selected) -->
-                <div *ngIf="currentCourseIsEnrolled && selectedLesson" class="mb-6 bg-black rounded-md overflow-hidden shadow-md">
-                    <video #videoPlayer controls class="w-full h-auto" (timeupdate)="onVideoTimeUpdate()" (ended)="onVideoTimeUpdate()">
-                        <source [src]="selectedLesson.videoUrl" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <h3 class="text-xl font-semibold text-white bg-gray-800 p-3">{{ selectedLesson.title }}</h3>
-                    <p *ngIf="selectedLesson.description" class="text-gray-300 bg-gray-800 p-3 text-sm">{{ selectedLesson.description }}</p>
-                </div>
-
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ courseDetails.title }}</h2>
-                <p class="text-gray-700 text-lg mb-6 whitespace-pre-wrap">{{ courseDetails.description }}</p>
-
-                <div *ngIf="courseDetails.instructor" class="flex items-center text-gray-600 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                    </svg>
-                    <p>Instructor: <span class="font-semibold">{{ courseDetails.instructor }}</span></p>
-                </div>
-
-                <div *ngIf="courseDetails.duration" class="flex items-center text-gray-600 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-7-9a1 1 0 000 2h.01a1 1 0 000-2H3zm2.39-4.99a1 1 0 10-1.414-1.414L3.05 4.586A8.01 8.01 0 002 10a1 1 0 002 0 6.002 6.002 0 011.66-4.24l.738-.738zM14.61 5.61a1 1 0 00-1.414 1.414l.738.738A6.002 6.002 0 0118 10a1 1 0 002 0 8.01 8.01 0 00-1.05-5.414l-1.414 1.414zM10 15a1 1 0 100 2h.01a1 1 0 100-2H10z" clip-rule="evenodd" />
-                    </svg>
-                    <p>Duration: <span class="font-semibold">{{ courseDetails.duration }} hours</span></p>
-                </div>
-
-                <div *ngIf="courseDetails.rating" class="flex items-center text-gray-600 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.927 8.73c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z" />
-                    </svg>
-                    <p>Rating: <span class="font-semibold">{{ courseDetails.rating }}</span></p>
-                </div>
-            </div>
-
-            <!-- Sidebar for Price, Enroll Button, and Lessons List -->
-            <div class="md:w-1/3 bg-gray-50 p-6 rounded-lg shadow-inner flex flex-col">
-                <span class="text-3xl font-bold text-blue-600 mb-6 text-center">₹{{ courseDetails.price }}</span>
-
-                <!-- Conditional button based on enrollment status -->
-                <ng-container *ngIf="isLoggedIn$ | async; else notLoggedIn">
-                    <button *ngIf="!currentCourseIsEnrolled" (click)="enrollInCourse()" class="w-full px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-lg font-semibold transition duration-200 mb-6">
-                        Enroll Now
-                    </button>
-                    <span *ngIf="currentCourseIsEnrolled" class="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-md text-lg font-semibold text-center select-none cursor-not-allowed mb-6">
-                        Enrolled
-                    </span>
-                </ng-container>
-
-                <!-- Template for not logged in state -->
-                <ng-template #notLoggedIn>
-                    <p class="text-gray-600 text-center mb-4">Log in to enroll in this course.</p>
-                    <button (click)="router.navigate(['/login'])" class="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg font-semibold transition duration-200 mb-6">
-                        Login to Enroll
-                    </button>
-                </ng-template>
-
-                <!-- Lessons List (only if enrolled) -->
-                <div *ngIf="currentCourseIsEnrolled && lessons.length > 0" class="mt-6 border-t border-gray-200 pt-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Course Content</h3>
-                    <ul class="space-y-2">
-                        <li *ngFor="let lesson of lessons; trackBy: trackByLessonId"
-                            (click)="selectLesson(lesson)"
-                            [class.bg-blue-100]="selectedLesson?.id === lesson.id"
-                            [class.bg-gray-100]="selectedLesson?.id !== lesson.id"
-                            class="p-3 rounded-md cursor-pointer hover:bg-blue-50 transition duration-150 flex items-center justify-between">
-                            <span class="text-gray-800 font-medium flex-grow">{{ lesson.lessonOrder}}. {{ lesson.title }}</span>
-                            <!-- DEBUGGING: Display boolean value for debugging -->
-                            <span class="ml-2 text-xs text-gray-500">{{ isLessonCompleted(lesson.id) }}</span>
-                            <svg *ngIf="isLessonCompleted(lesson.id)" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 000-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Download Certificate Button (only if enrolled and course is completed) -->
-                <div *ngIf="currentCourseIsEnrolled && isCourseCompleted" class="mt-6 border-t border-gray-200 pt-6">
-                    <!-- NEW: Add click handler to downloadCertificate() -->
-                    <button (click)="downloadCertificate()" class="w-full px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 text-lg font-semibold transition duration-200">
-                        Download Certificate
-                    </button>
-                </div>
-            </div>
+<div class="course-detail-container" *ngIf="courseDetails; else loadingOrNotFound">
+  <div class="container">
+    <div class="course-header">
+      <div class="header-content">
+        <h1 class="course-title">{{ courseDetails.title }}</h1>
+        <p class="course-instructor">By {{ courseDetails.instructor }}</p>
+        <div class="course-meta">
+          <span>{{ courseDetails.duration }} hours</span>
+          <span>Rating: {{ courseDetails.rating }}</span>
         </div>
+      </div>
     </div>
 
-    <ng-template #loadingOrNotFound>
-        <div class="text-center text-gray-600 py-12">
-            <p>Loading course details or course not found...</p>
+    <div class="course-body">
+      <div class="main-content">
+        <div class="video-player-container" *ngIf="currentCourseIsEnrolled && selectedLesson">
+          <video #videoPlayer controls (timeupdate)="onVideoTimeUpdate()">
+            <source [src]="selectedLesson.videoUrl" type="video/mp4">
+          </video>
         </div>
-    </ng-template>
+        <img *ngIf="!currentCourseIsEnrolled" [src]="courseDetails.thumbnailUrl" alt="{{ courseDetails.title }}" class="course-thumbnail">
+        <div class="course-description">
+          <h2>About this course</h2>
+          <p>{{ courseDetails.description }}</p>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="sidebar-card">
+          <span class="course-price">₹{{ courseDetails.price }}</span>
+          <ng-container *ngIf="isLoggedIn$ | async; else notLoggedIn">
+            <button *ngIf="!currentCourseIsEnrolled" (click)="payWithRazorpay()" class="btn btn-primary">
+              Purchase Course
+            </button>
+            <span *ngIf="currentCourseIsEnrolled" class="enrolled-badge">Enrolled</span>
+          </ng-container>
+          <ng-template #notLoggedIn>
+            <button (click)="router.navigate(['/login'])" class="btn btn-primary">
+              Login to Enroll
+            </button>
+          </ng-template>
+        </div>
+        <div class="lessons-list" *ngIf="currentCourseIsEnrolled && lessons.length > 0">
+          <h3>Course Content</h3>
+          <ul>
+            <li *ngFor="let lesson of lessons; trackBy: trackByLessonId" (click)="selectLesson(lesson)" [class.active]="selectedLesson?.id === lesson.id">
+              <span>{{ lesson.lessonOrder }}. {{ lesson.title }}</span>
+              <span *ngIf="isLessonCompleted(lesson.id)" class="completed-icon">✓</span>
+            </li>
+          </ul>
+        </div>
+        <div class="certificate-section" *ngIf="currentCourseIsEnrolled && isCourseCompleted">
+          <button (click)="downloadCertificate()" class="btn btn-primary">
+            Download Certificate
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<ng-template #loadingOrNotFound>
+  <div class="loading-container">
+    <p>Loading course details...</p>
+  </div>
+</ng-template>

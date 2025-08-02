@@ -1,0 +1,94 @@
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <!-- Header -->
+      <div class="bg-blue-600 px-6 py-4">
+        <h1 class="text-2xl font-bold text-white text-center">Certificate Verification</h1>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="px-6 py-12 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Verifying certificate...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !loading" class="px-6 py-12 text-center">
+        <div class="text-red-500 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Verification Error</h2>
+        <p class="text-gray-600">Unable to verify this certificate. Please check the URL and try again.</p>
+      </div>
+
+      <!-- Verification Results -->
+      <div *ngIf="verificationResult && !loading && !error" class="px-6 py-8">
+        <!-- Valid Certificate -->
+        <div *ngIf="verificationResult.valid" class="text-center">
+          <div class="text-green-500 mb-6">
+            <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          
+          <h2 class="text-3xl font-bold text-green-600 mb-2">✓ Certificate Verified</h2>
+          <p class="text-lg text-gray-600 mb-8">This certificate is authentic and valid.</p>
+          
+          <div class="bg-gray-50 rounded-lg p-6 text-left max-w-2xl mx-auto">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">Certificate Details</h3>
+            
+            <div class="space-y-3">
+              <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                <span class="font-medium text-gray-700">Student Name:</span>
+                <span class="text-gray-900 font-semibold">{{ verificationResult.studentName }}</span>
+              </div>
+              
+              <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                <span class="font-medium text-gray-700">Course Name:</span>
+                <span class="text-gray-900 font-semibold">{{ verificationResult.courseName }}</span>
+              </div>
+              
+              <div *ngIf="verificationResult.instructor" class="flex justify-between items-center border-b border-gray-200 pb-2">
+                <span class="font-medium text-gray-700">Instructor:</span>
+                <span class="text-gray-900">{{ verificationResult.instructor }}</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="font-medium text-gray-700">Completion Date:</span>
+                <span class="text-gray-900">{{ verificationResult.completionDate }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invalid Certificate -->
+        <div *ngIf="!verificationResult.valid" class="text-center">
+          <div class="text-red-500 mb-6">
+            <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          
+          <h2 class="text-3xl font-bold text-red-600 mb-2">✗ Certificate Invalid</h2>
+          <p class="text-lg text-gray-600 mb-4">This certificate could not be verified.</p>
+          
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4 max-w-2xl mx-auto">
+            <p class="text-red-700">{{ verificationResult.message }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <p class="text-center text-sm text-gray-500">
+          This verification was performed on {{ getCurrentDate() }}
+        </p>
+        <p class="text-center text-xs text-gray-400 mt-2">
+          Certificate verification system powered by Coursera Clone
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

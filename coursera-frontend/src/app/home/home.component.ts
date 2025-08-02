@@ -32,7 +32,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   showLogin: boolean = false;
   showRegister: boolean = false;
   isLoggedIn$: Observable<boolean>;
-  enrolledCourseIds: Set<number> = new Set<number>(); // NEW: To store IDs of enrolled courses
+  enrolledCourseIds: Set<string> = new Set<string>(); // NEW: To store IDs of enrolled courses
 
   showMyCourses: boolean = false;
 
@@ -272,7 +272,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // NEW: Helper method to check if a course is enrolled
-  isCourseEnrolled(courseId: number): boolean {
+  isCourseEnrolled(courseId: string): boolean {
     return this.enrolledCourseIds.has(courseId);
   }
 
@@ -321,30 +321,13 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onPurchaseCourse(courseId: number): void {
+  onPurchaseCourse(courseId: string): void {
     if (!this.authService.getToken()) {
       alert('Please log in to purchase a course.');
       this.router.navigate(['/login']);
       return;
     }
 
-    this.courseService.enrollInCourse(courseId).subscribe({
-      next: (response) => {
-        alert(response.message);
-        console.log('Enrollment successful:', response.message);
-        // NEW: Always refresh enrolled courses after a purchase
-        this.fetchMyEnrolledCourses(this.showMyCourses); // Pass current showMyCourses state to update chart if on that tab
-        // Also, update all courses in case a purchase happened and user switches back
-        this.fetchCourses(); // This will refresh the 'allCourses' list which includes the price chart if needed
-      },
-      error: (err) => {
-        console.error('Enrollment failed:', err);
-        let errorMessage = 'Failed to enroll in course.';
-        if (err.error && err.error.message) {
-          errorMessage = err.error.message;
-        }
-        alert(errorMessage);
-      }
-    });
+    this.router.navigate(['/payment', courseId]);
   }
 }

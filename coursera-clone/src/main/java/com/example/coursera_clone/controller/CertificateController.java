@@ -17,6 +17,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/certificates")
@@ -27,9 +29,10 @@ public class CertificateController {
     @Autowired
     private CertificateService certificateService;
 
+
     @GetMapping("/download/{courseId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')") // Ensure this matches your user roles
-    public ResponseEntity<InputStreamResource> downloadCertificate(@PathVariable Long courseId) {
+    public ResponseEntity<InputStreamResource> downloadCertificate(@PathVariable String courseId) {
         logger.info("DEBUG (CertificateController): Received request to download certificate for course ID: {}", courseId);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -71,6 +74,30 @@ public class CertificateController {
             // Catch any other unexpected exceptions
             logger.error("ERROR (CertificateController): Unexpected error during certificate generation for user {} and course {}: {}", username, courseId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/verify/{userId}/{courseId}")
+    public ResponseEntity<Map<String, Object>> verifyCertificate(@PathVariable String userId, @PathVariable String courseId) {
+        logger.info("DEBUG (CertificateController): Received request to verify certificate for user ID: {} and course ID: {}", userId, courseId);
+
+        try {
+            Map<String, Object> verificationResult = certificateService.verifyCertificate(userId, courseId);
+            logger.info("DEBUG (CertificateController): Certificate verification completed for user ID: {} and course ID: {}", userId, courseId);
+            return ResponseEntity.ok(verificationResult);
+
+        } catch (RuntimeException e) {
+            logger.error("ERROR (CertificateController): Error during certificate verification for user ID: {} and course ID: {}: {}", userId, courseId, e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("valid", false);
+            errorResponse.put("message", "Certificate verification failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            logger.error("ERROR (CertificateController): Unexpected error during certificate verification for user ID: {} and course ID: {}: {}", userId, courseId, e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("valid", false);
+            errorResponse.put("message", "An unexpected error occurred during verification");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }

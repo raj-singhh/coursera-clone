@@ -1,3 +1,5 @@
+
+// ...existing code...
 // src/main/java/com/example/coursera_clone/controller/EnrollmentController.java
 package com.example.coursera_clone.controller;
 
@@ -48,8 +50,37 @@ public class EnrollmentController {
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found in database!"));
     }
 
+    // Endpoint to check if a user is enrolled in a specific course (for frontend)
+    @GetMapping("/is-enrolled/{courseId}")
+    public ResponseEntity<Boolean> isEnrolledInCourse(@PathVariable String courseId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
+        }
+        boolean enrolled = enrollmentRepository.findByUserIdAndCourseId(currentUser.getId(), courseId).isPresent();
+        return ResponseEntity.ok(enrolled);
+    }
+
+
+
+    @GetMapping("/my-courses")
+    public ResponseEntity<List<Course>> getMyCourses() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<Enrollment> enrollments = enrollmentRepository.findByUserId(currentUser.getId());
+        List<Course> courses = enrollments.stream()
+                                        .map(enrollment -> courseRepository.findById(enrollment.getCourseId()).orElse(null))
+                                        .filter(course -> course != null)
+                                        .collect(Collectors.toList());
+        return ResponseEntity.ok(courses);
+    }
+
+    // NEW: Endpoint to check if a user is enrolled in a specific course
     @PostMapping("/enroll/{courseId}")
-    public ResponseEntity<?> enrollInCourse(@PathVariable Long courseId) {
+    public ResponseEntity<?> enrollInCourse(@PathVariable String courseId) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Error: User not authenticated."));
@@ -60,54 +91,17 @@ public class EnrollmentController {
             logger.warn("Enrollment failed for user {}: Course with ID {} not found.", currentUser.getUsername(), courseId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("Error: Course not found."));
         }
-        Course course = courseOptional.get();
 
-        if (enrollmentRepository.findByUserAndCourse(currentUser, course).isPresent()) {
-            logger.warn("Enrollment failed for user {}: Already enrolled in course ID {}.", currentUser.getUsername(), courseId);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageResponse("Error: Already enrolled in this course."));
+        // Check if already enrolled
+        Optional<Enrollment> existingEnrollment = enrollmentRepository.findByUserIdAndCourseId(currentUser.getId(), courseId);
+        if (existingEnrollment.isPresent()) {
+            logger.info("User {} is already enrolled in course {}.", currentUser.getUsername(), courseId);
+            return ResponseEntity.ok(new MessageResponse("Already enrolled in this course."));
         }
 
-        Enrollment enrollment = new Enrollment(currentUser, course);
+        Enrollment enrollment = new Enrollment(currentUser.getId(), courseId);
         enrollmentRepository.save(enrollment);
-
-        logger.info("User '{}' successfully enrolled in course '{}' (ID: {}).", currentUser.getUsername(), course.getTitle(), courseId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("Successfully enrolled in course!"));
-    }
-
-    @GetMapping("/my-courses")
-    public ResponseEntity<?> getMyEnrolledCourses() {
-        User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Error: User not authenticated."));
-        }
-
-        List<Enrollment> enrollments = enrollmentRepository.findByUser(currentUser);
-        List<Course> enrolledCourses = enrollments.stream()
-                                                .map(Enrollment::getCourse)
-                                                .collect(Collectors.toList());
-
-        logger.info("User '{}' retrieved {} enrolled courses.", currentUser.getUsername(), enrolledCourses.size());
-        return ResponseEntity.ok(enrolledCourses);
-    }
-
-    // NEW: Endpoint to check if a user is enrolled in a specific course
-    @GetMapping("/is-enrolled/{courseId}")
-    public ResponseEntity<Boolean> isEnrolledInCourse(@PathVariable Long courseId) {
-        User currentUser = getCurrentUser();
-        if (currentUser == null) {
-            // If not authenticated, they cannot be enrolled
-            return ResponseEntity.ok(false);
-        }
-
-        Optional<Course> courseOptional = courseRepository.findById(courseId);
-        if (courseOptional.isEmpty()) {
-            // If course doesn't exist, they can't be enrolled in it
-            return ResponseEntity.ok(false);
-        }
-        Course course = courseOptional.get();
-
-        boolean isEnrolled = enrollmentRepository.findByUserAndCourse(currentUser, course).isPresent();
-        logger.debug("User '{}' enrollment status for course ID {}: {}", currentUser.getUsername(), courseId, isEnrolled);
-        return ResponseEntity.ok(isEnrolled);
+        logger.info("User {} enrolled in course {} successfully.", currentUser.getUsername(), courseId);
+        return ResponseEntity.ok(new MessageResponse("Enrolled in course successfully!"));
     }
 }

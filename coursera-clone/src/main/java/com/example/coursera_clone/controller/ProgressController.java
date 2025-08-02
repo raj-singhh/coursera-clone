@@ -54,7 +54,7 @@ public class ProgressController {
 
     @PostMapping("/lesson/{lessonId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> updateLessonProgress(@PathVariable Long lessonId, @RequestBody ProgressUpdateRequest request) {
+    public ResponseEntity<?> updateLessonProgress(@PathVariable String lessonId, @RequestBody ProgressUpdateRequest request) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Error: User not authenticated."));
@@ -74,7 +74,7 @@ public class ProgressController {
 
     @GetMapping("/course/{courseId}/user-progress")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> getUserProgressForCourse(@PathVariable Long courseId) {
+    public ResponseEntity<?> getUserProgressForCourse(@PathVariable String courseId) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Error: User not authenticated."));
@@ -83,7 +83,7 @@ public class ProgressController {
         logger.info("DEBUG (ProgressController): User '{}' (ID: {}) requesting progress for course ID {}", currentUser.getUsername(), currentUser.getId(), courseId);
 
         try {
-            Map<Long, Progress> progressMap = progressService.getUserProgressForCourse(currentUser.getId(), courseId);
+            Map<String, Progress> progressMap = progressService.getUserProgressForCourse(currentUser.getId(), courseId);
             logger.info("DEBUG (ProgressController): User '{}' retrieved progress for {} lessons in course ID {}.", currentUser.getUsername(), progressMap.size(), courseId);
             return ResponseEntity.ok(progressMap);
         } catch (RuntimeException e) {
@@ -94,7 +94,7 @@ public class ProgressController {
 
     @GetMapping("/course/{courseId}/completion-status")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> getCourseCompletionStatus(@PathVariable Long courseId) {
+    public ResponseEntity<?> getCourseCompletionStatus(@PathVariable String courseId) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Error: User not authenticated."));

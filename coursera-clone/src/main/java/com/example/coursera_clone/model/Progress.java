@@ -3,44 +3,33 @@ package com.example.coursera_clone.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@Entity
-@Table(name = "progress", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "lesson_id"})
-})
+@Document(collection = "progress")
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "lesson"})
 public class Progress {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id", nullable = false)
-    private Lesson lesson;
+    private String userId;
+    private String lessonId;
 
     // FIXED: Renamed from 'isCompleted' to 'completed' to match JSON output
-    @Column(nullable = false)
     private boolean completed; // Renamed from isCompleted
-
-    @Column(nullable = false)
     private Double watchedPercentage;
 
     private LocalDateTime lastUpdated;
 
-    public Progress(User user, Lesson lesson) {
-        this.user = user;
-        this.lesson = lesson;
-        this.completed = false; // Initialize with new name
+    public Progress(String userId, String lessonId) {
+        this.userId = userId;
+        this.lessonId = lessonId;
+        this.completed = false;
         this.watchedPercentage = 0.0;
         this.lastUpdated = LocalDateTime.now();
     }

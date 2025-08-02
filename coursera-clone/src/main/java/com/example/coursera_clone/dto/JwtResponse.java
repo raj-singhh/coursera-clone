@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor; // ADDED: Add NoArgsConstructor for deserializa
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
-    private Long id;
+    private String id;
     private String username;
     private String email;
     // In a real app, you might include roles here

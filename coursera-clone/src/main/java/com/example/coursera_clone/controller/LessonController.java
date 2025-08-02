@@ -29,14 +29,14 @@ public class LessonController {
     private CourseRepository courseRepository;
 
     // Endpoint to get all lessons for a specific course, ordered by lessonOrder
+
     @GetMapping("/course/{courseId}")
-    public ResponseEntity<List<Lesson>> getLessonsByCourse(@PathVariable Long courseId) {
+    public ResponseEntity<List<Lesson>> getLessonsByCourse(@PathVariable String courseId) {
         Optional<Course> courseOptional = courseRepository.findById(courseId);
         if (courseOptional.isEmpty()) {
             logger.warn("Lessons not found: Course with ID {} does not exist.", courseId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        // No longer need to pass the Course object, pass the courseId directly
         List<Lesson> lessons = lessonRepository.findByCourseIdOrderByLessonOrder(courseId);
         logger.info("Retrieved {} lessons for course ID {}.", lessons.size(), courseId);
         return ResponseEntity.ok(lessons);
@@ -44,7 +44,7 @@ public class LessonController {
 
     // Endpoint to get a single lesson by ID
     @GetMapping("/{lessonId}")
-    public ResponseEntity<Lesson> getLessonById(@PathVariable Long lessonId) {
+    public ResponseEntity<Lesson> getLessonById(@PathVariable String lessonId) {
         Optional<Lesson> lesson = lessonRepository.findById(lessonId);
         if (lesson.isPresent()) {
             return ResponseEntity.ok(lesson.get());

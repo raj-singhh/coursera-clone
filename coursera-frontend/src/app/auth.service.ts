@@ -93,4 +93,8 @@ export class AuthService {
   getEmail(): string | null {
     return localStorage.getItem('email');
   }
+
+  isUserLoggedIn(): boolean {
+    return this.hasToken();
+  }
 }

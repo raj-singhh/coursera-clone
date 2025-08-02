@@ -4,22 +4,29 @@ package com.example.coursera_clone.service;
 import com.example.coursera_clone.model.Course;
 import com.example.coursera_clone.model.User;
 import com.example.coursera_clone.repository.CourseRepository;
-import com.example.coursera_clone.repository.ProgressRepository; // Assuming this exists
+import com.example.coursera_clone.repository.ProgressRepository;
 import com.example.coursera_clone.repository.UserRepository;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.kernel.colors.ColorConstants; // NEW: For link color
+import com.itextpdf.layout.element.Link; // NEW: For creating clickable links
+import com.itextpdf.kernel.pdf.action.PdfAction; // NEW: For link actions
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value; // NEW: Import for @Value
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class CertificateService {
@@ -33,12 +40,15 @@ public class CertificateService {
     private CourseRepository courseRepository;
 
     @Autowired
-    private ProgressRepository progressRepository; // Inject ProgressRepository
+    private ProgressRepository progressRepository;
 
     @Autowired
-    private ProgressService progressService; // Inject ProgressService to use its completion logic
+    private ProgressService progressService;
 
-    public ByteArrayInputStream generateCertificate(String username, Long courseId) {
+    @Value("${app.frontend.base-url}") // NEW: Inject the frontend base URL from application.properties
+    private String frontendBaseUrl;
+
+    public ByteArrayInputStream generateCertificate(String username, String courseId) {
         logger.info("DEBUG (CertificateService): Attempting to generate certificate for user '{}' and course ID '{}'", username, courseId);
 
         User user = userRepository.findByUsername(username)
@@ -53,13 +63,11 @@ public class CertificateService {
                     return new RuntimeException("Course not found for ID: " + courseId);
                 });
 
-        // CRITICAL CHECK: Verify if the user has completed the course using ProgressService
         logger.info("DEBUG (CertificateService): Checking course completion status for user '{}' (ID: {}) and course ID '{}'", username, user.getId(), courseId);
         boolean isCourseCompleted = progressService.getCourseCompletionStatus(user.getId(), courseId);
 
         if (!isCourseCompleted) {
             logger.warn("WARN (CertificateService): Course ID '{}' not completed by user '{}'. Certificate cannot be generated.", courseId, username);
-            // Throw an exception that the controller can catch and map to a 403 Forbidden
             throw new IllegalStateException("Course not completed by user. Certificate not available.");
         }
 
@@ -106,6 +114,25 @@ public class CertificateService {
                         .setFontSize(12));
             }
 
+            // --- NEW: Add Verification Link ---
+            document.add(new Paragraph("\n\n")); // Add more space before the link
+
+            // Construct the verification URL
+            // The frontend route will be something like /verify-certificate/:userId/:courseId
+            String verificationUrl = String.format("%s/verify-certificate/%s/%s", frontendBaseUrl, user.getId(), course.getId());
+            logger.info("DEBUG (CertificateService): Generated verification URL: {}", verificationUrl);
+
+            // Create a clickable link
+            Link verificationLink = new Link("Verify this certificate", PdfAction.createURI(verificationUrl));
+            verificationLink.setFontColor(ColorConstants.BLUE); // Make it blue like a hyperlink
+            verificationLink.setUnderline(); // Underline it to indicate it's a link
+
+            document.add(new Paragraph()
+                    .add(verificationLink)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontSize(10)); // Smaller font for the verification text
+            // --- END NEW ---
+
             document.close();
             logger.info("DEBUG (CertificateService): Certificate PDF generated successfully for user '{}' and course ID '{}'", username, courseId);
             return new ByteArrayInputStream(out.toByteArray());
@@ -114,5 +141,51 @@ public class CertificateService {
             logger.error("ERROR (CertificateService): Error generating PDF for user '{}' and course ID '{}': {}", username, courseId, e.getMessage(), e);
             throw new RuntimeException("Error generating certificate PDF", e);
         }
+    }
+
+    public Map<String, Object> verifyCertificate(String userId, String courseId) {
+        logger.info("DEBUG (CertificateService): Verifying certificate for user ID: {} and course ID: {}", userId, courseId);
+
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // Check if user exists
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> {
+                        logger.error("ERROR (CertificateService): User not found for ID: {}", userId);
+                        return new RuntimeException("User not found for ID: " + userId);
+                    });
+
+            // Check if course exists
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> {
+                        logger.error("ERROR (CertificateService): Course not found for ID: {}", courseId);
+                        return new RuntimeException("Course not found for ID: " + courseId);
+                    });
+
+            // Check if the user has completed the course
+            boolean isCourseCompleted = progressService.getCourseCompletionStatus(userId, courseId);
+
+            if (isCourseCompleted) {
+                result.put("valid", true);
+                result.put("message", "Certificate is valid");
+                result.put("studentName", user.getUsername());
+                result.put("courseName", course.getTitle());
+                result.put("instructor", course.getInstructor());
+                result.put("completionDate", LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")));
+                logger.info("DEBUG (CertificateService): Certificate verification successful for user ID: {} and course ID: {}", userId, courseId);
+            } else {
+                result.put("valid", false);
+                result.put("message", "Certificate is not valid - course not completed by this user");
+                logger.warn("WARN (CertificateService): Certificate verification failed - course not completed by user ID: {} for course ID: {}", userId, courseId);
+            }
+
+        } catch (Exception e) {
+            logger.error("ERROR (CertificateService): Error during certificate verification for user ID: {} and course ID: {}: {}", userId, courseId, e.getMessage(), e);
+            result.put("valid", false);
+            result.put("message", "Certificate verification failed: " + e.getMessage());
+        }
+
+        return result;
     }
 }

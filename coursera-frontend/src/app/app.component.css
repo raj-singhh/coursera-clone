@@ -1,0 +1,121 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #dbd198;
+}
+
+.app-header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap; /* Added to prevent overflow on smaller screens */
+}
+
+.logo a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+
+.logo img {
+  height: 35px;
+  margin-right: 12px;
+  transition: transform 0.3s ease;
+}
+
+.logo a:hover img {
+  transform: rotate(-10deg);
+}
+
+.main-nav {
+  display: flex;
+  flex-direction: row;
+  gap: 2.5rem;
+}
+
+.main-nav a {
+  text-decoration: none;
+  color: #555;
+  font-weight: 500;
+  font-size: 1rem;
+  position: relative;
+  transition: color 0.3s ease;
+  padding: 0.5rem 0;
+}
+
+.main-nav a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--primary-color);
+}
+
+.main-nav a.active::after {
+  width: 100%;
+}
+
+.user-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.welcome-user {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 20px;
+  padding: 8px 18px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem;
+}
+
+.app-footer {
+  background: #222;
+  color: #aaa;
+  text-align: center;
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+}

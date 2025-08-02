@@ -80,12 +80,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/certificates/verify/**").permitAll()
                 .requestMatchers("/api/courses/**").authenticated()
                 .requestMatchers("/api/enrollments/**").authenticated()
                 .requestMatchers("/api/lessons/**").authenticated()
                 .requestMatchers("/api/progress/**").authenticated()
-                // THIS LINE IS CRUCIAL: Ensures /api/certificates is protected but reachable
+               // /api/certificates is protected but reachable
                 .requestMatchers("/api/certificates/**").authenticated()
+                .requestMatchers("/api/payment/**").authenticated()
                 .requestMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )

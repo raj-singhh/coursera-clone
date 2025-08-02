@@ -1,0 +1,36 @@
+<div class="payment-container" *ngIf="course">
+  <div class="payment-card">
+    <div class="payment-options">
+      <h3>Payment Method</h3>
+      <ul>
+        <li (click)="selectPaymentMethod('razorpay')" [class.selected]="selectedPaymentMethod === 'razorpay'">
+          <span class="icon">💳</span>
+          <span>Razorpay</span>
+        </li>
+      </ul>
+    </div>
+    <div class="payment-details">
+      <div *ngIf="selectedPaymentMethod === 'razorpay'">
+        <h3>{{ course.title }}</h3>
+        <span class="course-price">Billed once.</span>
+
+        <div class="summary">
+          <div class="summary-item">
+            <span class="label">Subtotal</span>
+            <span class="value">{{ course.price | currency:'INR' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Discount</span>
+            <span class="value">- {{ 0 | currency:'INR' }}</span>
+          </div>
+          <div class="summary-item total-amount">
+            <span class="label">Total</span>
+            <span class="value">{{ course.price | currency:'INR' }}</span>
+          </div>
+        </div>
+
+        <button (click)="proceedToPayment()">Complete Payment</button>
+      </div>
+    </div>
+  </div>
+</div>

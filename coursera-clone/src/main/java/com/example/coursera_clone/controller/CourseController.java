@@ -35,7 +35,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Course> getCourseById(@PathVariable Long id) {
+    public ResponseEntity<Course> getCourseById(@PathVariable String id) {
         Optional<Course> course = courseRepository.findById(id);
         if (course.isPresent()) {
             return ResponseEntity.ok(course.get());
@@ -56,17 +56,13 @@ public class CourseController {
             course1.setInstructor("Dr. Alice Smith");
             course1.setDuration(20);
             course1.setRating(4.5);
-            // REMOVED: course1.setVideoUrl(...)
-            courseRepository.save(course1); // Save course first to get its ID
+            courseRepository.save(course1);
 
-            // Add Lessons for Course 1
-            lessonRepository.save(new Lesson("Course Introduction", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Overview of Spring Boot and course structure.", 1, course1));
-            lessonRepository.save(new Lesson("Setting up Development Environment", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Tools and setup for Spring Boot development.", 2, course1));
-            lessonRepository.save(new Lesson("Building Your First REST API", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Hands-on coding for a simple REST endpoint.", 3, course1));
-            lessonRepository.save(new Lesson("Database Integration with JPA", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Connecting to H2 database and using JPA.", 4, course1));
+            lessonRepository.save(new Lesson("Course Introduction", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Overview of Spring Boot and course structure.", 1, course1.getId()));
+            lessonRepository.save(new Lesson("Setting up Development Environment", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Tools and setup for Spring Boot development.", 2, course1.getId()));
+            lessonRepository.save(new Lesson("Building Your First REST API", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Hands-on coding for a simple REST endpoint.", 3, course1.getId()));
+            lessonRepository.save(new Lesson("Database Integration with JPA", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Connecting to H2 database and using JPA.", 4, course1.getId()));
 
-
-            // Course 2: Mastering Angular (Modern)
             Course course2 = new Course();
             course2.setTitle("Mastering Angular (Modern)");
             course2.setDescription("A deep dive into the modern Angular framework (Angular 2+). Build dynamic single-page applications with TypeScript, components, and services. Learn advanced topics like routing, state management, and testing. This course emphasizes best practices, performance optimization, and building scalable Angular applications. Includes hands-on projects to apply your knowledge.");
@@ -77,13 +73,10 @@ public class CourseController {
             course2.setRating(4.8);
             courseRepository.save(course2);
 
-            // Add Lessons for Course 2
-            lessonRepository.save(new Lesson("Angular Project Setup", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Setting up Angular CLI and workspace.", 1, course2));
-            lessonRepository.save(new Lesson("Components and Templates", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Building UI with Angular components.", 2, course2));
-            lessonRepository.save(new Lesson("Services and Dependency Injection", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Managing data and logic with services.", 3, course2));
+            lessonRepository.save(new Lesson("Angular Project Setup", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Setting up Angular CLI and workspace.", 1, course2.getId()));
+            lessonRepository.save(new Lesson("Components and Templates", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Building UI with Angular components.", 2, course2.getId()));
+            lessonRepository.save(new Lesson("Services and Dependency Injection", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Managing data and logic with services.", 3, course2.getId()));
 
-
-            // Course 3: Database Fundamentals with SQL
             Course course3 = new Course();
             course3.setTitle("Database Fundamentals with SQL");
             course3.setDescription("Understand relational databases, SQL, and database design principles. Essential for data management and backend development. Covers topics like normalization, joins, and indexing. You will learn to write complex SQL queries, design efficient database schemas, and manage data effectively. Practical labs with MySQL and PostgreSQL are included.");
@@ -94,12 +87,9 @@ public class CourseController {
             course3.setRating(4.2);
             courseRepository.save(course3);
 
-            // Add Lessons for Course 3
-            lessonRepository.save(new Lesson("Introduction to Relational Databases", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Understanding tables, rows, and columns.", 1, course3));
-            lessonRepository.save(new Lesson("Basic SQL Queries (SELECT, FROM, WHERE)", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Retrieving data from databases.", 2, course3));
+            lessonRepository.save(new Lesson("Introduction to Relational Databases", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Understanding tables, rows, and columns.", 1, course3.getId()));
+            lessonRepository.save(new Lesson("Basic SQL Queries (SELECT, FROM, WHERE)", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Retrieving data from databases.", 2, course3.getId()));
 
-
-            // Course 4: Advanced Java Programming & Concurrency
             Course course4 = new Course();
             course4.setTitle("Advanced Java Programming & Concurrency");
             course4.setDescription("Explore advanced Java concepts like concurrency, functional programming, and design patterns. This course is for experienced Java developers looking to deepen their understanding of the language and build high-performance applications. Topics include multithreading, Java Streams API, Lambdas, and common design patterns like Singleton, Factory, and Observer. Extensive coding exercises are provided.");
@@ -110,10 +100,9 @@ public class CourseController {
             course4.setRating(4.9);
             courseRepository.save(course4);
 
-            // Add Lessons for Course 4
-            lessonRepository.save(new Lesson("Multithreading Basics", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Threads, Runnables, and Executors.", 1, course4));
-            lessonRepository.save(new Lesson("Concurrency Utilities", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Locks, Semaphores, and Atomic Variables.", 2, course4));
-            lessonRepository.save(new Lesson("Java Streams API", "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", "Functional programming with collections.", 3, course4));
+            lessonRepository.save(new Lesson("Multithreading Basics", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Threads, Runnables, and Executors.", 1, course4.getId()));
+            lessonRepository.save(new Lesson("Concurrency Utilities", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Locks, Semaphores, and Atomic Variables.", 2, course4.getId()));
+            lessonRepository.save(new Lesson("Java Streams API", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Functional programming with collections.", 3, course4.getId()));
         }
     }
 }
