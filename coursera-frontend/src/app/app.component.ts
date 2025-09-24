@@ -1,8 +1,8 @@
 // src/app/app.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, Router, RouterLinkActive } from '@angular/router'; // Import Router
-import { AuthService } from './auth.service'; // Import AuthService
+import { RouterOutlet, RouterLink, Router, RouterLinkActive } from '@angular/router';
+import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -15,30 +15,24 @@ import { Observable } from 'rxjs';
     RouterOutlet,
     RouterLink,
     RouterLinkActive
-  ]
+  ],
 })
 export class AppComponent implements OnInit {
   title = 'Coursera Clone';
   isLoggedIn$: Observable<boolean>;
-  username: string | null = null;
+  username: string = '';
 
-  // FIXED: Changed 'private' to 'public' so it can be accessed in the template
   constructor(
     private authService: AuthService,
-    public router: Router // Make router public
+    public router: Router
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
   }
 
   ngOnInit(): void {
-    this.updateLoggedInUser();
-    this.isLoggedIn$.subscribe(loggedIn => {
-      this.updateLoggedInUser();
+    this.authService.currentUser$.subscribe(user => {
+      this.username = user?.username || '';
     });
-  }
-
-  private updateLoggedInUser(): void {
-    this.username = this.authService.getUsername();
   }
 
   navigateToAllCourses(): void {

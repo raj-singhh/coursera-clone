@@ -21,6 +21,6 @@ public class User {
     private String username;
     private String email;
     private String password;
-    // For MongoDB, you should store enrollment IDs or use DBRef if needed.
+    // For MongoDB, I should store enrollment IDs or use DBRef if needed.
     // private Set<String> enrollmentIds = new HashSet<>();
 }

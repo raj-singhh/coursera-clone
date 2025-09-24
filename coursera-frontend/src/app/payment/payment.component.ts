@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService, Course } from '../course.service';
 import { AuthService } from '../auth.service';
 import { PaymentService } from '../payment.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 declare var Razorpay: any;
 
@@ -14,9 +16,12 @@ declare var Razorpay: any;
   templateUrl: './payment.component.html',
   styleUrls: ['./payment.component.css']
 })
-export class PaymentComponent implements OnInit {
-  selectedPaymentMethod: string = 'razorpay';
+export class PaymentComponent implements OnInit, OnDestroy {
+  selectedPaymentMethod = 'razorpay';
   course: Course | null = null;
+
+  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private route: ActivatedRoute,
@@ -24,15 +29,26 @@ export class PaymentComponent implements OnInit {
     private courseService: CourseService,
     private authService: AuthService,
     private paymentService: PaymentService
-  ) { }
+  ) {
+    this.destroyRef.onDestroy(() => {
+      this.destroy$.next();
+      this.destroy$.complete();
+    });
+  }
 
   ngOnInit(): void {
     const courseId = this.route.snapshot.paramMap.get('id');
     if (courseId) {
-      this.courseService.getCourseById(courseId).subscribe(course => {
-        this.course = course;
-      });
+      this.courseService.getCourseById(courseId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(course => {
+          this.course = course;
+        });
     }
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup handled by destroyRef
   }
 
   selectPaymentMethod(method: string): void {

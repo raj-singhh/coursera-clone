@@ -6,8 +6,7 @@ import com.example.coursera_clone.model.Progress;
 import com.example.coursera_clone.model.User;
 import com.example.coursera_clone.service.ProgressService;
 // CORRECTED IMPORT: Assuming UserDetailsImpl is in the 'service' package
-// If UserDetailsImpl is actually UserDetailsServiceImpl, you might need to adjust logic slightly
-import com.example.coursera_clone.service.UserDetailsServiceImpl; // Assuming UserDetailsImpl is your UserDetailsServiceImpl
+import com.example.coursera_clone.service.UserDetailsServiceImpl; // Assuming UserDetailsImpl is my UserDetailsServiceImpl
 import com.example.coursera_clone.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

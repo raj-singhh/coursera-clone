@@ -4,7 +4,12 @@ module.exports = {
     "./src/**/*.{html,ts}", // This line is crucial for Tailwind to scan your Angular templates
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: 'var(--primary-color)',
+        secondary: 'var(--secondary-color)',
+      },
+    },
   },
   plugins: [],
 }

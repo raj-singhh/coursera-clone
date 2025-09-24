@@ -78,6 +78,22 @@ video {
   margin-bottom: 20px;
 }
 
+.sidebar-card .text-sm {
+  font-size: 0.875rem;
+}
+
+.sidebar-card .text-gray-500 {
+  color: #6b7280;
+}
+
+.sidebar-card .line-through {
+  text-decoration: line-through;
+}
+
+.sidebar-card .ml-2 {
+  margin-left: 0.5rem;
+}
+
 .lessons-list {
   background: white;
   padding: 30px;

@@ -27,6 +27,7 @@
       <div class="sidebar">
         <div class="sidebar-card">
           <span class="course-price">₹{{ courseDetails.price }}</span>
+          <span class="text-sm text-gray-500 line-through ml-2">₹{{ courseDetails.price * 1.5 }}</span>
           <ng-container *ngIf="isLoggedIn$ | async; else notLoggedIn">
             <button *ngIf="!currentCourseIsEnrolled" (click)="payWithRazorpay()" class="btn btn-primary">
               Purchase Course
@@ -51,6 +52,9 @@
         <div class="certificate-section" *ngIf="currentCourseIsEnrolled && isCourseCompleted">
           <button (click)="downloadCertificate()" class="btn btn-primary">
             Download Certificate
+          </button>
+          <button (click)="previewCertificate()" class="btn btn-secondary">
+            Preview Certificate
           </button>
         </div>
       </div>

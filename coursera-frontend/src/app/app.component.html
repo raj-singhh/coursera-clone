@@ -1,4 +1,4 @@
-<div class="app-container container">
+<div class="app-container">
   <header class="app-header">
     <div class="container header-content">
       <div class="logo">
@@ -17,7 +17,7 @@
           <a routerLink="/register" class="btn btn-primary">Register</a>
         </ng-container>
         <ng-container *ngIf="isLoggedIn$ | async">
-          <span class="welcome-user">Welcome, {{ username }}!</span>
+          <span class="welcome-message">Welcome {{ username }}</span>
           <button (click)="onLogout()" class="btn btn-secondary">Logout</button>
         </ng-container>
       </div>
@@ -30,7 +30,11 @@
 
   <footer class="app-footer">
     <div class="container">
-      <p>&copy; 2024 Coursera Clone. All rights reserved.</p>
+      <p>&copy; 2025 Coursera Clone. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a routerLink="/privacy-policy">Privacy Policy</a>
+        <a routerLink="/terms-of-service">Terms of Service</a>
+      </nav>
     </div>
   </footer>
 </div>

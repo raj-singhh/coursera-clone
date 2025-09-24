@@ -119,3 +119,20 @@
   padding: 1.5rem 0;
   font-size: 0.9rem;
 }
+
+.footer-nav {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.footer-nav a {
+  color: #aaa;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-nav a:hover {
+  color: white;
+}

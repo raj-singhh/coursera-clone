@@ -25,7 +25,7 @@ export interface JwtResponse {
   email: string;
 }
 
-// NEW: Export MessageResponse interface
+// Export MessageResponse interface
 export interface MessageResponse {
   message: string;
 }
@@ -38,6 +38,10 @@ export class AuthService {
   private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
 
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
+
+  // Observable for current user info
+  private currentUserSubject = new BehaviorSubject<{ username: string; id: number | null; email: string | null } | null>(this.getCurrentUserInfo());
+  currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) { }
 
@@ -54,15 +58,20 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<JwtResponse> {
+    console.log('Making login request to:', `${this.authApiUrl}/login`);
+    console.log('With payload:', request);
     return this.http.post<JwtResponse>(`${this.authApiUrl}/login`, request).pipe(
       tap(response => {
+        console.log('Received login response:', response);
         localStorage.setItem('jwt_token', response.token);
         localStorage.setItem('user_id', response.id.toString());
         localStorage.setItem('username', response.username);
         localStorage.setItem('email', response.email);
         this.setLoggedIn(true);
+        this.currentUserSubject.next({ username: response.username, id: response.id, email: response.email });
       }),
       catchError(error => {
+        console.error('Login error:', error);
         this.logout();
         throw error;
       })
@@ -75,6 +84,17 @@ export class AuthService {
     localStorage.removeItem('username');
     localStorage.removeItem('email');
     this.setLoggedIn(false);
+    this.currentUserSubject.next(null);
+  }
+  // Helper to get current user info from localStorage
+  private getCurrentUserInfo(): { username: string; id: number | null; email: string | null } | null {
+    const username = localStorage.getItem('username');
+    const id = localStorage.getItem('user_id');
+    const email = localStorage.getItem('email');
+    if (username && id) {
+      return { username, id: parseInt(id, 10), email };
+    }
+    return null;
   }
 
   getToken(): string | null {

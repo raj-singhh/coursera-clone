@@ -6,23 +6,29 @@ import com.example.coursera_clone.model.User;
 import com.example.coursera_clone.repository.CourseRepository;
 import com.example.coursera_clone.repository.ProgressRepository;
 import com.example.coursera_clone.repository.UserRepository;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Link;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.kernel.colors.ColorConstants; // NEW: For link color
-import com.itextpdf.layout.element.Link; // NEW: For creating clickable links
-import com.itextpdf.kernel.pdf.action.PdfAction; // NEW: For link actions
-
+import com.itextpdf.kernel.pdf.action.PdfAction;
+import com.itextpdf.svg.converter.SvgConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value; // NEW: Import for @Value
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -45,7 +51,7 @@ public class CertificateService {
     @Autowired
     private ProgressService progressService;
 
-    @Value("${app.frontend.base-url}") // NEW: Inject the frontend base URL from application.properties
+    @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
     public ByteArrayInputStream generateCertificate(String username, String courseId) {
@@ -75,63 +81,97 @@ public class CertificateService {
         try {
             PdfWriter writer = new PdfWriter(out);
             PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf);
+            Document document = new Document(pdf, PageSize.A4.rotate());
+
+            // Add logo
+            try (InputStream logoStream = getClass().getResourceAsStream("/static/logo.svg")) {
+                if (logoStream == null) {
+                    throw new RuntimeException("Could not find logo resource");
+                }
+                Image logo = SvgConverter.convertToImage(logoStream, pdf);
+                logo.setAutoScale(true);
+                logo.setFixedPosition(50, 500);
+                document.add(logo);
+            }
+
+            if (frontendBaseUrl == null || frontendBaseUrl.isEmpty()) {
+                logger.error("ERROR (CertificateService): Frontend base URL is not configured. Cannot generate verification link.");
+                throw new IllegalStateException("Frontend base URL is not configured. Certificate verification link cannot be added.");
+            }
+
+
+            // Fonts
+            PdfFont titleFont = PdfFontFactory.createFont();
+            PdfFont nameFont = PdfFontFactory.createFont();
+            PdfFont textFont = PdfFontFactory.createFont();
 
             // Certificate content
             document.add(new Paragraph("CERTIFICATE OF COMPLETION")
+                    .setFont(titleFont)
+                    .setFontSize(36)
+                    .setBold()
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(24)
-                    .setBold());
-            document.add(new Paragraph("\n")); // Spacer
+                    .setMarginTop(100));
 
             document.add(new Paragraph("This certifies that")
+                    .setFont(textFont)
+                    .setFontSize(18)
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(14));
+                    .setMarginTop(50));
+
             document.add(new Paragraph(user.getUsername().toUpperCase())
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(28)
+                    .setFont(nameFont)
+                    .setFontSize(48)
                     .setBold()
-                    .setUnderline());
-            document.add(new Paragraph("\n")); // Spacer
+                    .setUnderline()
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginTop(20));
 
             document.add(new Paragraph("has successfully completed the course")
+                    .setFont(textFont)
+                    .setFontSize(18)
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(14));
+                    .setMarginTop(50));
+
             document.add(new Paragraph(course.getTitle())
+                    .setFont(titleFont)
+                    .setFontSize(24)
+                    .setBold()
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(20)
-                    .setBold());
-            document.add(new Paragraph("\n")); // Spacer
+                    .setMarginTop(20));
 
             document.add(new Paragraph("on " + LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy")))
+                    .setFont(textFont)
+                    .setFontSize(14)
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(12));
-            document.add(new Paragraph("\n")); // Spacer
+                    .setMarginTop(50));
 
             if (course.getInstructor() != null && !course.getInstructor().isEmpty()) {
                 document.add(new Paragraph("Instructor: " + course.getInstructor())
+                        .setFont(textFont)
+                        .setFontSize(14)
                         .setTextAlignment(TextAlignment.CENTER)
-                        .setFontSize(12));
+                        .setMarginTop(20));
             }
 
-            // --- NEW: Add Verification Link ---
-            document.add(new Paragraph("\n\n")); // Add more space before the link
-
-            // Construct the verification URL
-            // The frontend route will be something like /verify-certificate/:userId/:courseId
-            String verificationUrl = String.format("%s/verify-certificate/%s/%s", frontendBaseUrl, user.getId(), course.getId());
-            logger.info("DEBUG (CertificateService): Generated verification URL: {}", verificationUrl);
-
-            // Create a clickable link
-            Link verificationLink = new Link("Verify this certificate", PdfAction.createURI(verificationUrl));
-            verificationLink.setFontColor(ColorConstants.BLUE); // Make it blue like a hyperlink
-            verificationLink.setUnderline(); // Underline it to indicate it's a link
-
-            document.add(new Paragraph()
-                    .add(verificationLink)
+            // Add border
+            PdfCanvas canvas = new PdfCanvas(pdf.getFirstPage());
+            canvas.setStrokeColor(ColorConstants.BLUE);
+            canvas.setLineWidth(5);
+            // Add verification link
+            String verificationLink = String.format("%s/verify-certificate/%s/%s", frontendBaseUrl, user.getId(), course.getId());
+            // Add verification link as a clickable element
+            Link link = new Link("Verify Certificate", PdfAction.createURI(verificationLink));
+            document.add(new Paragraph(link)
+                    .setFont(textFont)
+                    .setFontSize(10)
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(10)); // Smaller font for the verification text
-            // --- END NEW ---
+                    .setMarginTop(20)
+                    .setUnderline()
+                    .setFontColor(ColorConstants.BLUE));
+
+            canvas.rectangle(20, 20, document.getPdfDocument().getDefaultPageSize().getWidth() - 40, document.getPdfDocument().getDefaultPageSize().getHeight() - 40);
+            canvas.stroke();
 
             document.close();
             logger.info("DEBUG (CertificateService): Certificate PDF generated successfully for user '{}' and course ID '{}'", username, courseId);

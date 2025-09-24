@@ -1,12 +1,12 @@
 // src/app/course-detail/course-detail.component.ts
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService, Course, Lesson, LessonProgressMap, Progress } from '../course.service';
 import { AuthService } from '../auth.service';
 import { PaymentService } from '../payment.service';
-import { Observable, Subscription, forkJoin } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Observable, Subject, forkJoin } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
 
 declare var Razorpay: any;
 
@@ -24,13 +24,14 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   courseDetails: Course | null = null;
   currentCourseId: string | null = null;
   isLoggedIn$: Observable<boolean>;
-  currentCourseIsEnrolled: boolean = false;
+  currentCourseIsEnrolled = false;
   lessons: Lesson[] = [];
   selectedLesson: Lesson | null = null;
   lessonProgress: LessonProgressMap = {};
-  isCourseCompleted: boolean = false;
+  isCourseCompleted = false;
 
-  private isLoggedInSubscription: Subscription | null = null;
+  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private route: ActivatedRoute,
@@ -41,10 +42,16 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
+    this.destroyRef.onDestroy(() => {
+      this.destroy$.next();
+      this.destroy$.complete();
+    });
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.currentCourseId = id;
@@ -55,7 +62,9 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.isLoggedInSubscription = this.isLoggedIn$.subscribe(loggedIn => {
+    this.isLoggedIn$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(loggedIn => {
       if (loggedIn && this.currentCourseId) {
         this.checkEnrollmentAndProgress();
       } else {
@@ -68,9 +77,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.isLoggedInSubscription) {
-      this.isLoggedInSubscription.unsubscribe();
-    }
+    // Cleanup is handled by destroyRef
     if (this.videoPlayerRef && this.videoPlayerRef.nativeElement) {
       this.videoPlayerRef.nativeElement.pause();
       this.videoPlayerRef.nativeElement.removeAttribute('src');
@@ -325,6 +332,40 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
           errorMessage = err.error.message;
         } else if (err.status === 403) {
             errorMessage = 'You must complete all lessons to download the certificate.';
+        } else if (err.status === 404) {
+            errorMessage = 'Certificate not found or course data missing.';
+        }
+        alert(errorMessage);
+      }
+    });
+  }
+
+  previewCertificate(): void {
+    if (!this.currentCourseId || !this.authService.getToken()) {
+      alert('Please log in to preview the certificate.');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (!this.isCourseCompleted) {
+      alert('You must complete all lessons in the course to preview the certificate.');
+      return;
+    }
+
+    this.courseService.downloadCertificate(this.currentCourseId).subscribe({
+      next: (data: Blob) => {
+        const blob = new Blob([data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        console.log('Certificate preview opened in a new tab.');
+      },
+      error: (err) => {
+        console.error('Error previewing certificate:', err);
+        let errorMessage = 'Failed to preview certificate.';
+        if (err.error && err.error.message) {
+          errorMessage = err.error.message;
+        } else if (err.status === 403) {
+            errorMessage = 'You must complete all lessons to preview the certificate.';
         } else if (err.status === 404) {
             errorMessage = 'Certificate not found or course data missing.';
         }

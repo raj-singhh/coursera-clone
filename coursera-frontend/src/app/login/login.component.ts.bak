@@ -1,4 +1,4 @@
-import { Component, DestroyRef, EventEmitter, OnInit, OnDestroy, Output, inject } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, OnDestroy, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoginRequest } from '../auth.service';
@@ -8,32 +8,39 @@ import { AppState } from '../store/app.state';
 import * as AuthActions from '../store/auth/auth.actions';
 import * as AuthSelectors from '../store/auth/auth.selectors';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { takeUntil } from 'rxjs/operators';omponent, DestroyRef, EventEmitter, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { LoginRequest } from '../auth.service';
+import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { AppState } from '../store/app.state';
+import * as AuthActions from '../store/auth/auth.actions';
+import * as AuthSelectors from '../store/auth/auth.selectors';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit, OnDestroy {
   loginRequest: LoginRequest = { username: '', password: '' };
   errorMessage: string | null = null;
-  loading = false;
+  loading: boolean = false;
 
   @Output() switchToRegister = new EventEmitter<void>();
   @Output() loginSuccess = new EventEmitter<void>();
 
-  private readonly destroy$ = new Subject<void>();
   private readonly destroyRef = inject(DestroyRef);
+  private destroy$ = new Subject<void>();
 
   constructor(
     private router: Router,
     private store: Store<AppState>
   ) {
-    console.log('Backend URL:', environment.backendUrl);
     this.destroyRef.onDestroy(() => {
       this.destroy$.next();
       this.destroy$.complete();
@@ -68,27 +75,22 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe(token => {
         if (token) {
           this.loginSuccess.emit();
-          this.router.navigate(['/']);
         }
       });
   }
 
   ngOnDestroy(): void {
-    // Cleanup is handled by destroyRef
+    // Cleanup is handled automatically by DestroyRef
+  }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   onSubmit(): void {
-    console.log('Form submitted with:', this.loginRequest);
     this.errorMessage = null;
-    if (this.loginRequest.username && this.loginRequest.password) {
-      console.log('Dispatching login action...');
-      this.store.dispatch(AuthActions.login({
-        username: this.loginRequest.username,
-        password: this.loginRequest.password
-      }));
-    } else {
-      console.log('Username or password is empty');
-    }
+    this.store.dispatch(AuthActions.login({ username: this.loginRequest.username, password: this.loginRequest.password }));
   }
 
   onSwitchToRegister(): void {

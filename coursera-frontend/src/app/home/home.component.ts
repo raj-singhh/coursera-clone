@@ -1,14 +1,13 @@
-// src/app/home/home.component.ts
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CourseService, Course } from '../course.service';
 import { AuthService } from '../auth.service';
 import { Chart, registerables } from 'chart.js';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { LoginComponent } from '../login/login.component';
 import { RegisterComponent } from '../register/register.component';
 import { Router, ActivatedRoute, NavigationEnd, RouterLink } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 
 Chart.register(...registerables);
 
@@ -29,12 +28,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   enrolledCourses: Course[] = [];
   private priceChart: Chart | null = null;
 
-  showLogin: boolean = false;
-  showRegister: boolean = false;
+  showLogin = false;
+  showRegister = false;
   isLoggedIn$: Observable<boolean>;
-  enrolledCourseIds: Set<string> = new Set<string>(); // NEW: To store IDs of enrolled courses
+  enrolledCourseIds = new Set<string>();
 
-  showMyCourses: boolean = false;
+  showMyCourses = false;
+
+  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private courseService: CourseService,
@@ -44,8 +46,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
 
+    this.destroyRef.onDestroy(() => {
+      this.destroy$.next();
+      this.destroy$.complete();
+    });
+
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
     ).subscribe((event: NavigationEnd) => {
       this.handleRouteChanges(event.urlAfterRedirects);
     });
@@ -54,18 +62,19 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.handleRouteChanges(this.router.url);
 
-    this.isLoggedIn$.subscribe(loggedIn => {
+    this.isLoggedIn$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(loggedIn => {
       if (loggedIn) {
-        this.fetchMyEnrolledCourses(false); // Fetch enrolled courses silently on login status change
+        this.fetchMyEnrolledCourses(false);
       } else {
-        this.enrolledCourseIds.clear(); // Clear enrolled IDs on logout
+        this.enrolledCourseIds.clear();
       }
-      this.updateCourseLists(); // Re-fetch all courses or my courses based on current view
+      this.updateCourseLists();
     });
   }
 
   ngAfterViewInit(): void {
-    // Chart rendering happens after courses are fetched
   }
 
   ngOnDestroy(): void {
@@ -86,72 +95,73 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (url === '/my-courses') {
       if (this.authService.getToken()) {
         this.showMyCourses = true;
-        this.fetchMyEnrolledCourses(true); // Explicitly fetch and show chart for My Courses
+        this.fetchMyEnrolledCourses(true);
       } else {
         this.router.navigate(['/login']);
       }
-    } else { // Default home route '/'
+    } else {
       this.updateCourseLists();
     }
   }
 
   private updateCourseLists(): void {
-    // Only fetch courses if not showing login/register forms
     if (!this.showLogin && !this.showRegister) {
       if (this.showMyCourses) {
-        this.fetchMyEnrolledCourses(true); // Pass true to update chart
+        this.fetchMyEnrolledCourses(true);
       } else {
-        this.fetchCourses(); // Always fetch all courses
+        this.fetchCourses();
         if (this.authService.getToken()) {
-          this.fetchMyEnrolledCourses(false); // Fetch enrolled silently to update purchase buttons
+          this.fetchMyEnrolledCourses(false);
         }
       }
     }
   }
 
   fetchCourses(): void {
-    this.courseService.getAllCourses().subscribe({
-      next: (data) => {
-        this.allCourses = data;
-        console.log('All courses fetched successfully:', this.allCourses);
-        if (!this.showMyCourses && !this.showLogin && !this.showRegister) {
-          this.updatePriceChart(this.allCourses);
+    this.courseService.getAllCourses()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.allCourses = data;
+          console.log('All courses fetched successfully:', this.allCourses);
+          if (!this.showMyCourses && !this.showLogin && !this.showRegister) {
+            this.updatePriceChart(this.allCourses);
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching all courses:', error);
+          this.allCourses = [];
         }
-      },
-      error: (error) => {
-        console.error('Error fetching all courses:', error);
-        this.allCourses = [];
-        // No alert here, as it might be due to no token
-      }
-    });
+      });
   }
 
-  // Modified to take a parameter to decide if chart should be updated
   fetchMyEnrolledCourses(updateChart: boolean): void {
     if (!this.authService.getToken()) {
       this.enrolledCourses = [];
       this.enrolledCourseIds.clear();
-      if (updateChart) { // If we were expecting to update chart for My Courses but no token
+      if (updateChart) {
         this.updatePriceChart([]);
       }
       return;
     }
 
-    this.courseService.getMyEnrolledCourses().subscribe({
-      next: (data) => {
-        this.enrolledCourses = data;
-        this.enrolledCourseIds = new Set(data.map(course => course.id)); // Populate the Set
-        console.log('Enrolled courses fetched successfully:', this.enrolledCourses);
-        console.log('Enrolled course IDs:', Array.from(this.enrolledCourseIds));
+    this.courseService.getMyEnrolledCourses()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.enrolledCourses = data;
+          this.enrolledCourseIds = new Set(data.map(course => course.id));
+          console.log('Enrolled courses fetched successfully:', this.enrolledCourses);
+          console.log('Enrolled course IDs:', Array.from(this.enrolledCourseIds));
 
-        if (updateChart) { // Only update chart if explicitly requested (i.e., on My Courses tab)
-          this.updatePriceChart(this.enrolledCourses);
-        }
-      },
-      error: (error) => {
-        console.error('Error fetching enrolled courses:', error);
-        this.enrolledCourses = [];
-        this.enrolledCourseIds.clear();
+          if (updateChart) {
+            this.updatePriceChart(this.enrolledCourses);
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching enrolled courses:', error);
+          this.enrolledCourses = [];
+          this.enrolledCourseIds.clear();
         if (updateChart) {
           this.updatePriceChart([]);
         }
@@ -271,15 +281,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // NEW: Helper method to check if a course is enrolled
   isCourseEnrolled(courseId: string): boolean {
     return this.enrolledCourseIds.has(courseId);
   }
 
   onLoginSuccess(): void {
     this.router.navigate(['/']).then(() => {
-        this.fetchMyEnrolledCourses(false); // Refresh enrolled courses after login, but don't show chart
-        this.updateCourseLists(); // Re-evaluate which courses to show and update
+        this.fetchMyEnrolledCourses(false);
+        this.updateCourseLists();
     });
   }
 
@@ -308,7 +317,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showMyCourses = true;
     this.showLogin = false;
     this.showRegister = false;
-    this.fetchMyEnrolledCourses(true); // Explicitly fetch and show chart for My Courses
+    this.fetchMyEnrolledCourses(true);
   }
 
   viewAllCoursesInternal(): void {
@@ -317,7 +326,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showRegister = false;
     this.fetchCourses();
     if (this.authService.getToken()) {
-      this.fetchMyEnrolledCourses(false); // Update enrolled IDs in background for button states
+      this.fetchMyEnrolledCourses(false);
     }
   }
 
